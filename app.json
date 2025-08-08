@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "LottoAnalyser",
+    "slug": "LottoAnalyser",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.roskan.LottoAnalyser"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.roskan.LottoAnalyser"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "69cde059-1fd6-48d0-857d-0b954076054c"
+      }
+    },
+    "plugins": [
+      "react-native-google-mobile-ads"
+    ]
+  }
+}
