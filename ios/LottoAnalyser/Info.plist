@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>com.roskan.LottoAnalyser</string>
+          <string>app.rit.LottoAnalyser</string>
         </array>
       </dict>
       <dict>
@@ -39,6 +39,8 @@
     </array>
     <key>CFBundleVersion</key>
     <string>1</string>
+    <key>GADApplicationIdentifier</key>
+    <string>ca-app-pub-5605412363416280~1439722447</string>
     <key>GADDelayAppMeasurementInit</key>
     <false/>
     <key>LSMinimumSystemVersion</key>

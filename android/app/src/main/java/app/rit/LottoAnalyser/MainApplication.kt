@@ -1,4 +1,4 @@
-package com.roskan.LottoAnalyser
+package app.rit.LottoAnalyser
 
 import android.app.Application
 import android.content.res.Configuration

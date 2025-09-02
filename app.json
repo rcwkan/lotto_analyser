@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.roskan.LottoAnalyser"
+      "bundleIdentifier": "app.rit.LottoAnalyser"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.roskan.LottoAnalyser"
+      "package": "app.rit.LottoAnalyser"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -33,7 +33,13 @@
       }
     },
     "plugins": [
-      "react-native-google-mobile-ads"
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-5605412363416280~1439722447",
+          "iosAppId": "ca-app-pub-5605412363416280~1439722447"
+        }
+      ]
     ]
   }
 }
