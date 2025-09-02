@@ -24,7 +24,9 @@ export default function PredictionView() {
       { label: 'Latest 150', value: 150 },
       { label: 'Latest 200', value: 200 },
       { label: 'Latest 250', value: 250 },
-      { label: 'Latest 300', value: 300 }
+      { label: 'Latest 300', value: 300 },
+      { label: 'Latest 500', value: 500 },
+      { label: 'Latest 750', value: 750 },
     ];
 
     // Only show options that have enough data
@@ -40,7 +42,7 @@ export default function PredictionView() {
 
   const totalDrawsText = selectedCount === 'all'
     ? `All ${draws.length} results`
-    : `Latest ${filteredDraws.length} of ${draws.length} results. From ${filteredDraws[0].Date} to ${filteredDraws[filteredDraws.length-1].Date}`;
+    : `Latest ${filteredDraws.length} of ${draws.length} results. From ${filteredDraws[0].Date} to ${filteredDraws[filteredDraws.length - 1].Date}`;
 
   const frequency = useMemo(() => calculateFrequency(draws), [draws]);
 

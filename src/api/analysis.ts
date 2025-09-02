@@ -246,3 +246,230 @@ export const calculateAdvancedStats = (draws: LottoDraw[]): AdvancedStats => {
 
   return { mean, variance, stdDev, skewness, kurtosis, median, q1, q3, iqr, cv, min: Math.min(...sums), max: Math.max(...sums) };
 }
+
+type MarkovChain = Record<number, Record<number, number>>;
+
+/**
+ * Builds a Markov Chain transition matrix from the draw history.
+ * It assumes the draws are sorted from most recent to oldest.
+ * @param draws The array of all lotto draws.
+ * @returns A Markov Chain transition matrix.
+ */
+export const buildMarkovChain = (draws: LottoDraw[]): MarkovChain => {
+  const chain: MarkovChain = {};
+  // We iterate backwards, from the oldest draw to the newest.
+  for (let i = draws.length - 2; i >= 0; i--) {
+    const currentDrawNumbers = [draws[i].B1, draws[i].B2, draws[i].B3, draws[i].B4, draws[i].B5, draws[i].B6];
+    const previousDrawNumbers = [draws[i + 1].B1, draws[i + 1].B2, draws[i + 1].B3, draws[i + 1].B4, draws[i + 1].B5, draws[i + 1].B6];
+
+    for (const prevNum of previousDrawNumbers) {
+      if (!chain[prevNum]) {
+        chain[prevNum] = {};
+      }
+      for (const currentNum of currentDrawNumbers) {
+        // For each number in the previous draw, we count how many times
+        // each number in the current draw appeared next.
+        chain[prevNum][currentNum] = (chain[prevNum][currentNum] || 0) + 1;
+      }
+    }
+  }
+  return chain;
+};
+
+/**
+ * Generates a prediction using the Markov Chain model.
+ * @param chain The pre-built Markov Chain.
+ * @param lastDraw The most recent draw to base the prediction on.
+ * @returns An array of 6 predicted numbers.
+ */
+export const predictWithMarkovChain = (chain: MarkovChain, lastDraw: LottoDraw): number[] => {
+  const lastDrawNumbers = [lastDraw.B1, lastDraw.B2, lastDraw.B3, lastDraw.B4, lastDraw.B5, lastDraw.B6];
+  const weightedPool: number[] = [];
+
+  // Create a weighted pool of potential next numbers based on the last draw.
+  for (const num of lastDrawNumbers) {
+    if (chain[num]) {
+      for (const nextNum in chain[num]) {
+        const weight = chain[num][nextNum];
+        for (let i = 0; i < weight; i++) {
+          weightedPool.push(parseInt(nextNum));
+        }
+      }
+    }
+  }
+
+  // If the pool is too small (e.g., last draw numbers are new), fall back to a random selection.
+  if (weightedPool.length < 6) {
+    const prediction = new Set<number>();
+    while (prediction.size < 6) {
+      prediction.add(Math.floor(Math.random() * 59) + 1); // Assuming numbers are 1-59
+    }
+    return Array.from(prediction).sort((a, b) => a - b);
+  }
+
+  // Pick 6 unique numbers from the weighted pool.
+  const prediction = new Set<number>();
+  while (prediction.size < 6) {
+    const randomIndex = Math.floor(Math.random() * weightedPool.length);
+    prediction.add(weightedPool[randomIndex]);
+  }
+
+  return Array.from(prediction).sort((a, b) => a - b);
+};
+
+ 
+/**
+ * Calculates the season for a given date.
+ * 0: Winter, 1: Spring, 2: Summer, 3: Autumn
+ * @param date The date object.
+ * @returns A number representing the season.
+ */
+const getSeason = (date: Date): number => {
+  const month = date.getMonth();
+  if (month < 2 || month === 11) return 0; // Winter (Dec, Jan, Feb)
+  if (month < 5) return 1; // Spring (Mar, Apr, May)
+  if (month < 8) return 2; // Summer (Jun, Jul, Aug)
+  return 3; // Autumn (Sep, Oct, Nov)
+};
+
+/**
+ * Calculates the approximate moon phase for a given date.
+ * The result is a value from 0 (New Moon) to 7 (Waning Crescent).
+ * @param date The date object.
+ * @returns A number representing the moon phase.
+ */
+const getMoonPhase = (date: Date): number => {
+    const LUNAR_CYCLE = 29.530588853;
+    const KNOWN_NEW_MOON = new Date(2000, 0, 6); // A known new moon date
+    const daysSinceKnownNewMoon = (date.getTime() - KNOWN_NEW_MOON.getTime()) / (1000 * 60 * 60 * 24);
+    const currentCycleDays = daysSinceKnownNewMoon % LUNAR_CYCLE;
+    return Math.floor((currentCycleDays / LUNAR_CYCLE) * 8) % 8;
+};
+
+/**
+ * Calculates the day of the year (1-366).
+ * @param date The date object.
+ * @returns The day of the year.
+ */
+const getDayOfYear = (date: Date): number => {
+    const start = new Date(date.getFullYear(), 0, 0);
+    const diff = (date.getTime() - start.getTime()) + ((start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000);
+    const oneDay = 1000 * 60 * 60 * 24;
+    return Math.floor(diff / oneDay);
+};
+
+/**
+ * Calculates a numerological "Life Path Number" from a date.
+ * It repeatedly sums the digits of the day, month, and year until a single digit is left.
+ * @param date The date object.
+ * @returns A single-digit number (1-9).
+ */
+const getLifePathNumber = (date: Date): number => {
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+
+    const sumDigits = (num: number): number => {
+        let sum = 0;
+        String(num).split('').forEach(digit => {
+            sum += parseInt(digit, 10);
+        });
+        return sum;
+    };
+
+    let total = sumDigits(day) + sumDigits(month) + sumDigits(year);
+    
+    while (total > 9 && total !== 11 && total !== 22) { // Master numbers 11 and 22 are exceptions in numerology, but we'll reduce them for simplicity here.
+        total = sumDigits(total);
+    }
+    
+    return total;
+};
+
+const getYear = (date: Date): number => {
+  
+    return date.getFullYear() - 2015;
+};
+
+// --- Main Prediction Logic ---
+
+interface FeatureSet {
+    season: number;
+    moonPhase: number;
+    dayOfWeek: number; // Sunday is 0, Saturday is 6
+    dayOfYear: number;
+    year: number;
+    lifePathNumber: number;
+}
+
+/**
+ * Generates a prediction based on historical performance during similar conditions.
+ * @param draws The entire history of lotto draws.
+ * @param targetFeatures The features to predict for.
+ * @returns An array of 6 predicted numbers.
+ */
+export const predictWithFeatures = (draws: LottoDraw[], targetFeatures: FeatureSet): number[] => {
+    const weightedPool: number[] = [];
+
+    draws.forEach(draw => {
+        const drawDate = parseDate(draw.Date);
+        const numbersInDraw = [draw.B1, draw.B2, draw.B3, draw.B4, draw.B5, draw.B6, draw.BB];
+
+        // Calculate features for the historical draw date
+        const drawSeason = getSeason(drawDate);
+        const drawMoonPhase = getMoonPhase(drawDate);
+        const drawDayOfWeek = drawDate.getDay();
+        const drawDayOfYear = getDayOfYear(drawDate);
+        const drawLifePath = getLifePathNumber(drawDate);
+        const drawYear = getYear(drawDate);
+
+        let weight = 1; // Base weight for every number
+        if (drawSeason === targetFeatures.season) weight += 2;
+        if (drawMoonPhase === targetFeatures.moonPhase) weight += 2;
+        if (drawDayOfWeek === targetFeatures.dayOfWeek) weight += 1; // Day of week is a strong factor
+        if (drawLifePath === targetFeatures.lifePathNumber) weight += 1;
+        if (drawYear === targetFeatures.year) weight += 2;
+        
+        // Add a smaller weight for being close to the day of the year
+        if (Math.abs(drawDayOfYear - targetFeatures.dayOfYear) < 15) {
+            weight += 1;
+        }
+        
+        for (const num of numbersInDraw) {
+            if(num) {
+                for (let i = 0; i < weight; i++) {
+                    weightedPool.push(num);
+                }
+            }
+        }
+    });
+
+    // Fallback if the pool is empty
+    if (weightedPool.length < 6) {
+        const prediction = new Set<number>();
+        while (prediction.size < 6) {
+            prediction.add(Math.floor(Math.random() * 59) + 1); // Assuming numbers 1-59
+        }
+        return Array.from(prediction).sort((a, b) => a - b);
+    }
+    
+    // Pick 6 unique numbers from the weighted pool
+    const prediction = new Set<number>();
+    while (prediction.size < 6) {
+        const randomIndex = Math.floor(Math.random() * weightedPool.length);
+        prediction.add(weightedPool[randomIndex]);
+    }
+
+    return Array.from(prediction).sort((a, b) => a - b);
+};
+
+// Export the helpers so the UI can use them
+export const featureHelpers = {
+    getSeason,
+    getMoonPhase,
+    parseDate,
+    getDayOfYear,
+    getLifePathNumber,
+    getYear,
+};
+
