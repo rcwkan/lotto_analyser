@@ -70,7 +70,7 @@ export default function ChartsView() {
 
         // Calculate expected frequency (assuming uniform distribution)
         const totalNumbers = draws.length * 6;
-        const expectedFreq = totalNumbers / 49;
+        const expectedFreq = totalNumbers / 59;
 
         // Chi-square test preparation
         const chiSquare = sorted.reduce((acc, [num, observed]) => {
@@ -127,7 +127,7 @@ export default function ChartsView() {
     const gapAnalysis = useMemo(() => {
         const gaps: Record<number, number[]> = {};
 
-        for (let num = 1; num <= 49; num++) {
+        for (let num = 1; num <= 59; num++) {
             gaps[num] = [];
             let lastSeen = -1;
 
@@ -192,7 +192,7 @@ export default function ChartsView() {
         });
 
         const hot = Object.entries(recentFreq).sort((a, b) => b[1] - a[1]).slice(0, 10);
-        const cold = Array.from({ length: 49 }, (_, i) => i + 1)
+        const cold = Array.from({ length: 59 }, (_, i) => i + 1)
             .filter(num => !recentFreq[num])
             .slice(0, 10);
 

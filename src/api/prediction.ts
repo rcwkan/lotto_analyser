@@ -29,8 +29,9 @@ export interface PredictionWeights {
 export class LottoPredictionEngine {
   private draws: LottoDraw[];
   private weights: PredictionWeights;
+  private refResult: Number[];
 
-  constructor(draws: LottoDraw[], customWeights?: Partial<PredictionWeights>) {
+  constructor(draws: LottoDraw[], customWeights?: Partial<PredictionWeights>, refResult?: Number[]) {
     this.draws = draws;
     this.weights = {
       frequency: 0.25,
@@ -41,6 +42,8 @@ export class LottoPredictionEngine {
       correlation: 0.10,
       ...customWeights
     };
+
+    this.refResult = refResult ?? [];
   }
 
   /**
@@ -137,7 +140,7 @@ export class LottoPredictionEngine {
   private calculateGaps(): Record<number, number[]> {
     const gaps: Record<number, number[]> = {};
 
-    for (let num = 1; num <= 49; num++) {
+    for (let num = 1; num <= 59; num++) {
       gaps[num] = [];
       let lastSeen = -1;
 
@@ -181,7 +184,7 @@ export class LottoPredictionEngine {
     // Theoretical expected gap = total weighted draws / weighted number frequency
     const frequency = this.calculateAllTimeFrequency();
 
-    for (let num = 1; num <= 49; num++) {
+    for (let num = 1; num <= 59; num++) {
       const weightedFreq = frequency[num] || 0;
       expectedGaps[num] = weightedFreq > 0 ? totalWeightedDraws / weightedFreq : totalWeightedDraws;
     }
@@ -262,7 +265,8 @@ export class LottoPredictionEngine {
       '11-20': 0,
       '21-30': 0,
       '31-40': 0,
-      '41-49': 0
+      '41-50': 0,
+      '51-59': 0
     };
 
     this.draws.forEach((draw, index) => {
@@ -274,9 +278,23 @@ export class LottoPredictionEngine {
         else if (num <= 20) ranges['11-20'] += weight;
         else if (num <= 30) ranges['21-30'] += weight;
         else if (num <= 40) ranges['31-40'] += weight;
-        else ranges['41-49'] += weight;
+        else if (num <= 50) ranges['41-50'] += weight;
+        else ranges['51-59'] += weight;
       });
     });
+
+
+    const refWeight = 1.25;
+    this.refResult.forEach((number, index) => {
+      const num = number.valueOf();
+      if (num <= 10) ranges['1-10'] = ranges['1-10'] * refWeight;
+      else if (num <= 20) ranges['11-20'] = ranges['11-20'] * refWeight;
+      else if (num <= 30) ranges['21-30'] = ranges['21-30'] * refWeight;
+      else if (num <= 40) ranges['31-40'] = ranges['31-40'] * refWeight;
+      else if (num <= 50) ranges['31-40'] = ranges['31-40'] * refWeight;
+      else ranges['51-59'] = ranges['51-59'] * refWeight;
+    });
+
 
     return ranges;
   }
@@ -324,7 +342,7 @@ export class LottoPredictionEngine {
 
   private identifyColdNumbers(): number[] {
     const recentFreq = this.calculateRecentFrequency(20);
-    const allNumbers = Array.from({ length: 49 }, (_, i) => i + 1);
+    const allNumbers = Array.from({ length: 59 }, (_, i) => i + 1);
 
     return allNumbers
       .filter(num => !recentFreq[num])
@@ -398,7 +416,7 @@ export class LottoPredictionEngine {
   private calculateNumberScores(analysis: any): Record<number, number> {
     const scores: Record<number, number> = {};
 
-    for (let num = 1; num <= 49; num++) {
+    for (let num = 1; num <= 59; num++) {
       let score = 0;
 
       // Frequency score (normalized)
@@ -428,6 +446,10 @@ export class LottoPredictionEngine {
 
       // Moderate boost for hot numbers
       if (analysis.hotNumbers.includes(num)) {
+
+      }
+
+      if (this.refResult.includes(num)) {
         score *= 1.2;
       }
 
@@ -501,7 +523,7 @@ export class LottoPredictionEngine {
     const bonusScores: Record<number, number> = {};
     const maxFreq = Math.max(...Object.values(bonusFreq));
 
-    for (let num = 1; num <= 49; num++) {
+    for (let num = 1; num <= 59; num++) {
       const freq = bonusFreq[num] || 0;
       bonusScores[num] = freq / maxFreq * 100;
     }
@@ -572,11 +594,11 @@ export class LottoPredictionEngine {
     // Range distribution
     const ranges = { low: 0, mid: 0, high: 0 };
     selectedNumbers.forEach(n => {
-      if (n <= 16) ranges.low++;
-      else if (n <= 33) ranges.mid++;
+      if (n <= 19) ranges.low++;
+      else if (n <= 38) ranges.mid++;
       else ranges.high++;
     });
-    reasoning.push(`Number distribution - Low(1-16): ${ranges.low}, Mid(17-33): ${ranges.mid}, High(34-49): ${ranges.high}`);
+    reasoning.push(`Number distribution - Low(1-19): ${ranges.low}, Mid(20-38): ${ranges.mid}, High(39-59): ${ranges.high}`);
 
     return reasoning;
   }
@@ -621,5 +643,10 @@ export class LottoPredictionEngine {
 // Usage example function
 export function predictLottoNumbers(draws: LottoDraw[], customWeights?: Partial<PredictionWeights>): PredictionResult {
   const engine = new LottoPredictionEngine(draws, customWeights);
+  return engine.generatePrediction();
+}
+
+export function predictLottoNumberWithRef(refResult: Number[], draws: LottoDraw[], customWeights?: Partial<PredictionWeights>): PredictionResult {
+  const engine = new LottoPredictionEngine(draws, customWeights, refResult);
   return engine.generatePrediction();
 }

@@ -144,7 +144,7 @@ class SequenceLotteryPredictor {
 export default SequenceLotteryPredictor;
 
 // Usage example function
-export async function predictLottoNumbers(past10Results: number[][], predictionDate: Date): Promise<Number[]> {
+export async function tfLitePredict(past10Results: number[][], predictionDate: Date): Promise<Number[]> {
     const engine = new SequenceLotteryPredictor();
     await engine.loadModel();
 

@@ -237,7 +237,7 @@ export default function ChartsView() {
     const gapAnalysis = useMemo(() => {
         const gaps: Record<number, number[]> = {};
 
-        for (let num = 1; num <= 49; num++) {
+        for (let num = 1; num <= 59; num++) {
             gaps[num] = [];
             let lastSeen = -1;
 
