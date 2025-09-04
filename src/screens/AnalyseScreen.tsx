@@ -11,6 +11,7 @@ import PredictionView from '../components/analysis/PredictionView';
 import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads'; 
 import PredictionMarkovChainView from '../components/analysis/PredictionMarkovChainView';
 import PredictionFeatureView from '../components/analysis/PredictionFeatureView';
+import PredictionTfliteView from '../components/analysis/PredictionTfliteView';
  
 
 
@@ -35,9 +36,12 @@ export default function AnalyseScreen() {
           <Tab.Screen name="Hot & Cold" component={HotColdView} />
           <Tab.Screen name="Pairs" component={CombinationView} />
           <Tab.Screen name="Charts" component={ChartsView} />
+           <Tab.Screen name="Prediction (TF Liste)" component={PredictionTfliteView} />
           <Tab.Screen name="Prediction (Statistics)" component={PredictionView} />
           <Tab.Screen name="Prediction (Markov Chain)" component={PredictionMarkovChainView} />
           <Tab.Screen name="Prediction (Features)" component={PredictionFeatureView} />
+
+          
    
            
         </Tab.Navigator>
